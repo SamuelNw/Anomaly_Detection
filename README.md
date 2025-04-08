@@ -22,15 +22,23 @@ This is a **Microsoft-Fabric-powered** solution, geared towards pin-pointing ano
 
 ### IMPLEMENTATION
 
-On the Microsoft Fabric workspace, we have set up our **LakeHouse**. _The data is ingested from an Azure SQL DB_. After successfully ingesting the data (inside **PesaTransactionsV1** Lakehouse), we've created a notebook - `DetectAnomalies.ipynb` that sequentially executes the solution's main steps, which are:
+On the Microsoft Fabric workspace, we have set up our **LakeHouse**. _The data is ingested from an Azure SQL DB_. We also have a `.csv` file for the same data in the lakehouse, as that is an alternative to access the data. After successfully ingesting the data (inside **PesaTransactionsV1** Lakehouse), we've created a notebook - `DetectAnomalies.ipynb` that sequentially executes the solution's main steps, which are:
 
 #### 1. Train the model, test the data for anomalies.
 
--   First step here would be to read the data from the lakehouse table, create a data frame, then select and prepare the relevant features - in this case; transaction ammounts, the account numbers, the posting date.
+-   First step here would be to read the data from the lakehouse table, create a data frame, then select and prepare the relevant features(that will help to study the behaviour of the account holders):
+    -   **Account Numbers** - Unique identifiers.
+    -   **Transaction Posting Date** - The day of the transaction.
+    -   **Transaction Time** - Exact times they happened.
+    -   **Transaction Amount**
+    -   **Rolling Average** - The mean of the total amount transacted by each account number/user.
+    -   **Previous Transaction Time** - The last time a certain user transacted.
+    -   **Is Transaction the first** - Whether this is the first transaction for a particular user.
+    -   **Time since last transaction** - Time difference between the last and second last transactions for each user/account.
 -   Split the data to obtain reasonable chunks for training the model, and for the evaluation bit.
 -   Train the model with the respective data. We chose the **Isolation Forest Algorithm** which you can read more about [on scikit-learn docs](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html). It is used conventionally due to its strengths in working with high-dimension datasets.
 -   The model is then run on the test_data. Completion of this step is marked by an additional `Status` column on the table, whose value for each row is either **Normal** or **Anomaly**, for usual and unusual activities, respectively.
-    ![Fig: See the Status Column](./Images//anomaly_status_column.jpeg)
+    ![Fig: See the Status Column](./Images//status_column.jpeg)
 -   As the final task in this step, since the above is added to the original data, we then sort out the anomaly-marked rows, and add them into a new table - named **anomaly_results** inside the lakehouse.
 
 #### 2. Use OpenAI GPT4o-mini to analyze the anomaly level (low/medium/high), along with explanations to the deductions and the message that will be sent to the risk analysts.
@@ -62,7 +70,7 @@ def format_prompt(transaction):
 -   Consequently, a function to send the prompt to the model, and we do request a JSON object format response, which via another function, we parse the JSON to obtain the necessary information (Risk Level, Explanation and Alert message) into a **pandas series**.
 -   The point for this, is to come up with a table with the original data, but with additional columns for the risk level, the explanation as to why this is an anomaly, and the alert message to be sent to analysts.
 -   All of this, we add to a new table -named **anomaly_risk_summary** in the lakehouse that looks like this:
-    ![Fig: : See the Risk Level, Explanation & Alert Message Columns](./Images/anomaly_risk_summary.jpeg)
+    ![Fig: : See the Risk Level, Explanation & Alert Message Columns](./Images/final_report.jpeg)
 
 #### 3. Connect to Azure blob storage, upload `.txt` files (the text in here is the alert message content with crucial info) for any anomalies found.
 
@@ -90,7 +98,11 @@ except Exception as e:
 -   After that, convert the spark DataFrame (which remember, has only the anomalies, and the three added columns) to textfiles, and subsequently upload them to blob storage.
 -   For verification purposes, we log; A message to show if connecting to the blob container is successful, if uploading the anomaly `.txt` file/files is successful, and lastly, a verification to show how many items are currently in the blob container (well, only a few file names).
 
-#### 4. Automatically send Alerts (Power Automate).
+#### 4. View Detailed explanation
+
+-   Once the analyst receives the alert, they can visit the dashboard to get a detailed explanation of why that transaction was flagged as a potential fraud.
+
+#### 5. Automatically send Alerts (Power Automate).
 
 -   We've set up a trigger on **Power Automate** to listen to addition or modifications of files in the blob storage, then created steps to send emails of the alert message to risk analysts.
 -   On Power automate:
