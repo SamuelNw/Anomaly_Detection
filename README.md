@@ -1,5 +1,7 @@
 # Anomaly_Detection
 
+See the project video [here](https://www.youtube.com/watch?v=LM8H3p0z5Js).
+
 ### THE PROBLEM
 
 Financial anomalies in Kenyan Institutions cost millions annually due to weak fraud detection systems. According to the CBK’s 2023 Fraud Report, fraud-related losses in Kenyan financial institutions surged by 21.3% in 2022, with internal fraud (e.g., transaction manipulation) accounting for 34% of cases (CBK, 2023). SACCOs—which serve over 14 million Kenyans (SASRA, 2023)—are particularly vulnerable, as manual audits and rule-based systems fail to detect sophisticated anomalies like transaction laundering or account takeovers. A 2022 study by the Kenya Bankers Association found that 68% of fraud cases were detected too late, with recovery rates below 15%. [This article](https://envestreetfinancial.com/kenyan-banks-lose-ksh36-6-million-to-insider-fraud-and-cybersecurity-lapses/#:~:text=In%20a%20concerning%20revelation%2C%20two%20prominent%20Kenyan%20banks,the%20persistent%20challenges%20within%20the%20nation%E2%80%99s%20banking%20sector) documents how one financial fraud involved three suspicious transactions totaling KSh 9.5 million, linked to a compromised employee machine, and another that saw Equity Bank lose KSh 1.5 billion in an insider-driven fraud with 47 unauthorized transactions.
